@@ -25,10 +25,6 @@ st.write(
 )
 
 
-input_type = st.selectbox("What kind of help do you need?",
-                              ['Subject Help', 'Exam Preparation', 'Assignment Review', 'Study Techniques', 'Project Assistance', 'Career Guidance'],
-                              help="""Can’t find your need in the list?""")
-
 st.write(
     """
     ##### Upload Study Material Here
