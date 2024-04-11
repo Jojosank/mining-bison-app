@@ -1,8 +1,9 @@
+from google.cloud import bigquery
 from dotenv import load_dotenv
 import google.generativeai as genai
 import os
 import streamlit as st
-
+import pandas as pd
 
 st.write(
     """
@@ -31,7 +32,41 @@ st.write(
     """
 )
 
-st.file_uploader("Study Material", type=None, accept_multiple_files=False, key=None, help=None, on_change=None, args=None, kwargs=None)
+uploaded_file = st.file_uploader("Study Material", type=None, accept_multiple_files=False, key=None, help="Make the file format is .csv", on_change=None, args=None, kwargs=None)
+
+if uploaded_file is not None:
+    # Read the file into a Pandas DataFrame
+    df = pd.read_csv(uploaded_file)
+
+
+    # Create a BigQuery client
+    client = bigquery.Client()
+
+    # Create a new dataset (if it doesn't already exist)
+    dataset_id = "josephsankahtechx2024.checklist_dataset"
+    dataset = bigquery.Dataset(dataset_id)
+    #dataset = client.create_dataset(dataset)  # API request
+
+    # Create a new table (if it doesn't already exist)
+    table_id = "josephsankahtechx2024.checklist_dataset.checklist-template"
+    table = bigquery.Table(dataset.table(table_id))
+    # table = client.create_table(table)  # API request
+
+    # Load the data from the DataFrame into the table
+    job_config = bigquery.LoadJobConfig(schema=[
+        bigquery.SchemaField("Number", "STRING"),
+        bigquery.SchemaField("Course Title", "STRING"),
+        bigquery.SchemaField("Grade", "STRING")
+    ])
+    job = client.load_table_from_dataframe(
+        df, table, job_config=job_config
+    )  # API request
+
+    # Wait for the job to complete
+    job.result()  # Waits for table load to complete.
+
+    # Print a success message
+    st.write("Data successfully uploaded to BigQuery.")
 
 st.write(
     """
