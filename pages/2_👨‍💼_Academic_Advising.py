@@ -32,7 +32,7 @@ st.write(
     """
 )
 
-uploaded_file = st.file_uploader("Study Material", type=None, accept_multiple_files=False, key=None, help="Make the file format is .csv", on_change=None, args=None, kwargs=None)
+uploaded_file = st.file_uploader("Study Material", type=None, accept_multiple_files=False, key=None, help="Make sure the file format is .csv", on_change=None, args=None, kwargs=None)
 
 if uploaded_file is not None:
     # Read the file into a Pandas DataFrame
