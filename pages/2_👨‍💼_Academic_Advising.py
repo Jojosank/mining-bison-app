@@ -1,9 +1,13 @@
+import google.auth.transport.requests
 from google.cloud import bigquery
 from dotenv import load_dotenv
 import google.generativeai as genai
 import os
 import streamlit as st
 import pandas as pd
+
+
+credentials, project = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
 
 st.write(
     """
@@ -40,41 +44,23 @@ if uploaded_file is not None:
 
 
     # Create a BigQuery client
-    client = bigquery.Client()
+    client = bigquery.Client(credentials=credentials, project=project)
 
-    # Create a new dataset (if it doesn't already exist)
+    # Initialize IDs
     dataset_id = "josephsankahtechx2024.checklist_dataset"
-    dataset = bigquery.Dataset(dataset_id)
-    #dataset = client.create_dataset(dataset)  # API request
+    table_id = "josephsankahtechx2024.checklist_dataset.checklist_template"
 
-    # Create a new table (if it doesn't already exist)
-    table_id = "josephsankahtechx2024.checklist_dataset.checklist-template"
-    table = bigquery.Table(dataset.table(table_id))
-    # table = client.create_table(table)  # API request
 
-    # Load the data from the DataFrame into the table
-    job_config = bigquery.LoadJobConfig(schema=[
-        bigquery.SchemaField("Number", "STRING"),
-        bigquery.SchemaField("Course Title", "STRING"),
-        bigquery.SchemaField("Grade", "STRING")
-    ])
-    job = client.load_table_from_dataframe(
-        df, table, job_config=job_config
-    )  # API request
+    # Get the Table object from the Dataset object
+    table = client.get_table(table_id)
 
-    # Wait for the job to complete
-    job.result()  # Waits for table load to complete.
+    errors = client.insert_rows_json(table_id, df.to_dict('records'))
 
-    # Print a success message
-    st.write("Data successfully uploaded to BigQuery.")
+    if errors == []:
+        st.write("Data successfully uploaded to BigQuery.")
 
-st.write(
-    """
-    ##### Enter your command...
-    """
-)
 
-input_text = st.text_input("Input Text")
+input_text = st.text_input(label="Enter your genai query...")
 
 # Load environment variables from .env file
 load_dotenv()
