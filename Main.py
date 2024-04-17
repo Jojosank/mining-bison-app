@@ -2,7 +2,7 @@ import streamlit as st
 import bcrypt
 from google.cloud import bigquery
 
-client = bigquery.Client('josephsankahtechx2024')
+client = bigquery.Client('joemotatechx2024')
 
 # st.title("My login page")
 
@@ -22,7 +22,7 @@ def get_hashed_password(plain_text_password):
 
 
 def check_password():
-    QUERY = ("SELECT * FROM `josephsankahtechx2024.user_data.user_credentials` WHERE username = '" +
+    QUERY = ("SELECT * FROM `joemotatechx2024.user_data.user_login` WHERE username = '" +
              st.session_state.username + "'")
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -56,7 +56,7 @@ def logout():
 
 
 def create_user():
-    QUERY = ("SELECT hashed_password FROM `josephsankahtechx2024.user_data.user_credentials` WHERE username = '" +
+    QUERY = ("SELECT hashed_password FROM `joemotatechx2024.user_data.user_login` WHERE username = '" +
              st.session_state.username + "'")
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -67,7 +67,7 @@ def create_user():
     query_job = client.query(QUERY, job_config=job_config)
     rows = query_job.result()
     if rows.total_rows == 0:
-        myquery = "INSERT INTO `josephsankahtechx2024.user_data.user_credentials` (username, hashed_password) VALUES (\"%s\", \"%s\")" % (
+        myquery = "INSERT INTO `joemotatechx2024.user_data.user_login` (username, hashed_password) VALUES (\"%s\", \"%s\")" % (
             st.session_state.username, get_hashed_password(st.session_state.password))
         QUERY = (myquery)
         query_job = client.query(QUERY)  # API request
