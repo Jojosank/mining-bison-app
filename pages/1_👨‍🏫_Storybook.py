@@ -69,4 +69,7 @@ def main():
             st.write(image_content)
 
 if __name__ == "__main__":
-    main()
+    if st.session_state.status != "verified":
+        st.write("You need to log in first")
+    else:
+        main()
