@@ -3,6 +3,9 @@ import google.generativeai as genai
 from PIL import Image
 from io import BytesIO
 from commonfunctions import is_verified
+from google.cloud import bigquery
+
+client = bigquery.Client('joemotatechx2024')
 
 #function to generate content using Gen AI
 def generate_content(prompt, uploaded_photos):
