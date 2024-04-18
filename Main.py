@@ -35,7 +35,20 @@ def check_password():
     if rows.total_rows > 0:
         for row in rows:
             if bcrypt.checkpw(st.session_state.password.encode('utf-8'), row.hashed_password.encode('utf-8')):
+                #Update logged_in to YES if password matches
+                update_query = f"""
+                    UPDATE `joemotatechx2024.user_data.user_login`
+                    SET logged_in = 'YES'
+                    WHERE username = @username
+                """
+                update_job_config = bigquery.QueryJobConfig(
+                    query_parameters=[
+                        bigquery.ScalarQueryParameter("username", "STRING", st.session_state.username)
+                    ]
+                )
+                client.query(update_query, job_config=update_job_config)
                 st.session_state.status = "verified"
+                return  # Exit function after successful login and update
     if st.session_state.status != "verified":
         st.session_state.status = "incorrect"
 

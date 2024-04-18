@@ -2,6 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 from io import BytesIO
+from commonfunctions import is_verified
 
 #function to generate content using Gen AI
 def generate_content(prompt, uploaded_photos):
@@ -69,7 +70,7 @@ def main():
             st.write(image_content)
 
 if __name__ == "__main__":
-    if st.session_state.status != "verified":
-        st.write("You need to log in first")
+    if is_verified():
+        st.write("Sorry you cannot access the story book because you need to log in first :)")
     else:
         main()
