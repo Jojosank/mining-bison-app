@@ -4,7 +4,7 @@ from google.cloud import bigquery
 
 client = bigquery.Client('joemotatechx2024')
 
-# st.title("My login page")
+
 
 st.set_page_config(
             page_title="Main",
@@ -22,12 +22,12 @@ def get_hashed_password(plain_text_password):
 
 
 def check_password():
-    QUERY = ("SELECT * FROM `joemotatechx2024.user_data.user_login` WHERE username = '" +
-             st.session_state.username + "'")
+    QUERY = (
+        f"""SELECT * FROM `joemotatechx2024.user_data.user_login` WHERE username = @username"""
+    )
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
-            bigquery.ScalarQueryParameter(
-                "username", "STRING", st.session_state.username),
+            bigquery.ScalarQueryParameter("username", "STRING", st.session_state.username),
         ]
     )
     query_job = client.query(QUERY, job_config=job_config)
@@ -35,7 +35,7 @@ def check_password():
     if rows.total_rows > 0:
         for row in rows:
             if bcrypt.checkpw(st.session_state.password.encode('utf-8'), row.hashed_password.encode('utf-8')):
-                #Update logged_in to YES if password matches
+                # Update logged_in to YES if password matches
                 update_query = f"""
                     UPDATE `joemotatechx2024.user_data.user_login`
                     SET logged_in = 'YES'
@@ -48,6 +48,30 @@ def check_password():
                 )
                 client.query(update_query, job_config=update_job_config)
                 st.session_state.status = "verified"
+
+                #Check if username already exists in storybook dataset
+                check_duplicate_query = f"""
+                    SELECT * FROM `joemotatechx2024.storybook.user_input_output` WHERE username = @username
+                """
+                check_job_config = bigquery.QueryJobConfig(
+                    query_parameters=[
+                        bigquery.ScalarQueryParameter("username", "STRING", st.session_state.username),
+                    ]
+                )
+                check_query_job = client.query(check_duplicate_query, job_config=check_job_config)
+                check_rows = check_query_job.result()
+                if check_rows.total_rows == 0:
+                    # Insert username if not a duplicate
+                    insert_query = f"""
+                        INSERT INTO `joemotatechx2024.storybook.user_input_output` (username)
+                        VALUES (@username)
+                    """
+                    insert_job_config = bigquery.QueryJobConfig(
+                        query_parameters=[
+                            bigquery.ScalarQueryParameter("username", "STRING", st.session_state.username),
+                        ]
+                    )
+                    client.query(insert_query, job_config=insert_job_config)
                 return  # Exit function after successful login and update
     if st.session_state.status != "verified":
         st.session_state.status = "incorrect"
