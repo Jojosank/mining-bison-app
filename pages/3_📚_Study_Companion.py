@@ -1,9 +1,11 @@
 import streamlit as st
+import commonfunctions
 import google.generativeai as genai
 import vertexai
 from vertexai.preview.vision_models import ImageGenerationModel
 import pdfplumber
 import io
+from commonfunctions import is_verified, update_logout_status, get_logged_in_username
 
 def main():
     if 'courses' not in st.session_state:
@@ -179,7 +181,7 @@ def main():
 
 
 if __name__ == "__main__":
-    if st.session_state.status != "verified":
-        st.write("You need to log in first")
+    if is_verified():
+        st.write("Sorry you cannot access the storybook because you need to log in first :)")
     else:
         main()

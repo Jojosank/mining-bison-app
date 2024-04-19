@@ -5,6 +5,7 @@ from io import BytesIO
 from commonfunctions import is_verified
 from commonfunctions import get_logged_in_username
 from google.cloud import bigquery
+from datetime import datetime
 from fpdf import FPDF
 from reportlab.pdfgen import canvas
 import vertexai
@@ -14,15 +15,48 @@ import io
 
 client = bigquery.Client('joemotatechx2024')
 
-# Define function to save story as PDF
-def save_as_pdf(story_content):
+def create_pdf(story,output_image_path,):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, story_content)
+    pdf.multi_cell(0, 10, story)
+
+    pdf.image(output_image_path, x=10, y=pdf.get_y() + 10, w=100)
+
     pdf_output = io.BytesIO()
     pdf_output.write(pdf.output(dest="S").encode("latin1"))
-    return pdf_output.getvalue()
+    pdf_bytes = pdf_output.getvalue()
+    return pdf_bytes
+
+def display_story(story_content, output_image_path):
+    st.write("Generated Storybook Content:")
+    st.write(story_content)
+    image = Image.open(output_image_path)
+    st.image(image, caption='Story Book Image')
+        
+
+def insert_data_into_bigquery(username, story_name, story_content):
+    # Define the BigQuery table ID
+    table_id = "joemotatechx2024.storybook.user_stories"
+
+    # Get the current timestamp
+    timestamp = datetime.utcnow().isoformat()
+
+    # Prepare the data to insert
+    row_to_insert = {
+        "username": username,
+        "story_name": story_name,
+        "story": story_content,
+        "timestamp": timestamp 
+    }
+
+    # Insert the row into the BigQuery table
+    errors = client.insert_rows_json(table_id, [row_to_insert], row_ids=[None])
+
+    if errors:
+        print(f"Errors encountered while inserting data into BigQuery: {errors}")
+    else:
+        print("Data inserted successfully into BigQuery table.")
 
 def generate_prompt_for_image_generation(story_content):
     api_key = "AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug"
@@ -86,6 +120,45 @@ def generate_storybook(prompt, image_contents):
 
     return text_response.text
 
+def get_last_two_stories(username):
+    # Define the BigQuery table ID
+    table_id = "joemotatechx2024.storybook.user_stories"
+
+    # Construct the SQL query to retrieve the last two stories for the given username
+    query = f"""
+        SELECT story_name, story
+        FROM `{table_id}`
+        WHERE username = @username
+        ORDER BY timestamp DESC
+        LIMIT 2
+    """
+
+    # Set up the query parameters
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("username", "STRING", username)
+        ]
+    )
+
+    # Execute the query
+    query_job = client.query(query, job_config=job_config)
+    results = query_job.result()
+
+    # Process the results
+    stories = []
+    for i, row in enumerate(results):
+        story_name = row["story_name"]
+        story_content = row["story"]
+        output_image_path = f"image_output{i+2}.png"
+        generate_image_from_text(story_content, output_image_path)
+        stories.append({
+            "story_name": story_name,
+            "story": story_content,
+            "image_path": output_image_path
+        })
+
+    return stories
+
 def main():
     username = get_logged_in_username()
 
@@ -132,26 +205,13 @@ def main():
 
         # Display generated content
         st.success("Storybook generated successfully!")
-        st.write("Generated Storybook Content:")
-        st.write(story_content)
-        image = Image.open(output_image_path)
-        st.image(image, caption='Story Book Image')
+        display_story(story_content, output_image_path)
 
-        # Add the image to the PDF
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.multi_cell(0, 10, story_content)
-
-        # Add the generated image to the PDF
-        pdf.image(output_image_path, x=10, y=pdf.get_y() + 10, w=100)
-
-        # Output the PDF
-        pdf_output = io.BytesIO()
-        pdf_output.write(pdf.output(dest="S").encode("latin1"))
-        pdf_bytes = pdf_output.getvalue()
+        pdf_bytes = create_pdf(story_content,output_image_path)
 
         filename = "story.pdf"
+
+        insert_data_into_bigquery(username, story_name, story_content)
 
         # Create a download button for the PDF file
         st.download_button(
@@ -160,7 +220,22 @@ def main():
             file_name=filename,
             mime="application/pdf",
         )
+        
+    # Library Section    
+    st.header("Library")
 
+    # Get the last two stories for the user
+    last_two_stories = get_last_two_stories(username)
+
+    if last_two_stories:
+        for i, story in enumerate(last_two_stories):
+            st.subheader(f"Story {i+1}: {story['story_name']}")
+            st.write(story['story'])
+            image = Image.open(story['image_path'])
+            st.image(image, caption='Story Image')
+    else:
+        st.write("You have no stories yet.")
+    
 
 if __name__ == "__main__":
     if is_verified():
