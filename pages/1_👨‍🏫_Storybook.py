@@ -5,51 +5,90 @@ from io import BytesIO
 from commonfunctions import is_verified
 from commonfunctions import get_logged_in_username
 from google.cloud import bigquery
+from fpdf import FPDF
+from reportlab.pdfgen import canvas
+import vertexai
+from vertexai.preview.vision_models import ImageGenerationModel
+import base64
+import io
 
+client = bigquery.Client('joemotatechx2024')
 
-def generate_content(prompt, uploaded_photos, uploaded_texts):
+# Define function to save story as PDF
+def save_as_pdf(story_content):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, story_content)
+    pdf_output = io.BytesIO()
+    pdf_output.write(pdf.output(dest="S").encode("latin1"))
+    return pdf_output.getvalue()
+
+def generate_prompt_for_image_generation(story_content):
     api_key = "AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug"
     genai.configure(api_key=api_key)
 
     # Create text generation model
     text_model = genai.GenerativeModel('gemini-pro')
 
-    # Create image understanding model
-    vision_model = genai.GenerativeModel('gemini-pro-vision')
+    # Add generated story contents to the prompt
+    prompt = "create a simple prompt for Google's text to image generation api to understand this story and doesnt give me this error: This prompt contains words that violate Vertex AI's usage guidelines. Story Book: "
 
+    prompt += " ".join(story_content)
     # Generate text content based on the prompt
     text_response = text_model.generate_content(prompt)
 
-    # Generate image content based on the uploaded photos
-    image_responses = []
-    image_texts = []  # Store generated text from images
+    return text_response.text
+
+def generate_image_from_text(story_content, output_image_path):
+    # Initialize the image generation model
+    vertexai.init(project="joemotatechx2024", location="us-central1")
+    model = ImageGenerationModel.from_pretrained("imagegeneration@006")
+    
+    promptInfo = generate_prompt_for_image_generation(story_content)
+    # Generate the image based on the text
+    images = model.generate_images(prompt=promptInfo, number_of_images=1)
+    
+    # Save the generated image
+    images[0].save(location=output_image_path, include_generation_parameters=False)
+
+def generate_image_contents(uploaded_photos):
+    api_key = "AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug" 
+    genai.configure(api_key=api_key)
+
+    # Create image understanding model
+    vision_model = genai.GenerativeModel('gemini-pro-vision')
+
+    image_contents = []
+
     for photo in uploaded_photos:
         # Open the uploaded photo
         img = Image.open(BytesIO(photo.read()))
 
         # Generate content based on the image
         image_response = vision_model.generate_content(img)
-        image_responses.append(image_response.text)
-        image_texts.append(image_response.text)
+        image_contents.append(image_response.text)
 
-    # Generate text content based on the uploaded texts
-    text_responses = []
-    for text_file in uploaded_texts:
-        # Read the content of the uploaded text file
-        text_content = text_file.getvalue().decode("utf-8")
-        
-        # Generate content based on the text
-        text_response = text_model.generate_content(text_content)
-        text_responses.append(text_response.text)
+    return image_contents
 
-    # Add generated text from images to the prompt
-    prompt += " ".join(image_texts)
+def generate_storybook(prompt, image_contents):
+    api_key = "AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug"
+    genai.configure(api_key=api_key)
 
-    return text_response.text, image_responses, text_responses
+    # Create text generation model
+    text_model = genai.GenerativeModel('gemini-pro')
 
+    # Add generated image contents to the prompt
+    prompt += " ".join(image_contents)
+
+    # Generate text content based on the prompt
+    text_response = text_model.generate_content(prompt)
+
+    return text_response.text
 
 def main():
     username = get_logged_in_username()
+
     if username:
         st.title(f"Welcome to the Storybook Generator {username}!")
     else:
@@ -57,15 +96,11 @@ def main():
 
     # Text input section for storybook name
     st.header("Storybook Name")
-    storybook_name = st.text_input("Enter the storybook name:")
+    story_name = st.text_input("Enter the storybook name:")
 
     # File uploader section for photos
     st.header("Upload Photos")
     uploaded_photos = st.file_uploader("Upload photos for the storybook", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
-
-    # File uploader section for text files
-    st.header("Upload Texts")
-    uploaded_texts = st.file_uploader("Upload text files for the storybook", type=["txt"], accept_multiple_files=True)
 
     # Dropdown menu for subjects
     st.header("Subject Selection")
@@ -79,27 +114,56 @@ def main():
 
     # Customization section
     st.header("Customizations")
-    customization = st.text_area("Add any customizations or specific points you want to get across in the storybook:")
+    customization = st.text_area("Add any customizations or specific points you want to get across in the storybook or how many pages you want in the story book etc.:")
 
-    # Generate button
-    if st.button("Generate"):
-        prompt = f"Generate a storybook for {storybook_name} on the subject of {selected_subject} for {selected_grade} grade. Customizations: {customization}."
-        text_content, image_contents, text_responses = generate_content(prompt, uploaded_photos, uploaded_texts)
+    # Generate Button
+    if st.button("Generate") and uploaded_photos:
+        prompt = f"Generate a storybook on the subject of {selected_subject} for {selected_grade} grade. Special Requests: {customization}. Make sure to provide a title to the story"
+
+        # Generate image contents
+        image_contents = generate_image_contents(uploaded_photos)
         
+        # Generate storybook content
+        story_content = generate_storybook(prompt, image_contents)
+
+        # Generate an image from the story content
+        output_image_path = "output_image.png"
+        generate_image_from_text(str(story_content), output_image_path)
+
         # Display generated content
         st.success("Storybook generated successfully!")
-        st.write("Generated Text Content:")
-        st.write(text_content)
-        st.write("Generated Image Content:")
-        for image_content in image_contents:
-            st.write(image_content)
-        st.write("Generated Text Content from Files:")
-        for text_response in text_responses:
-            st.write(text_response)
+        st.write("Generated Storybook Content:")
+        st.write(story_content)
+        image = Image.open(output_image_path)
+        st.image(image, caption='Story Book Image')
+
+        # Add the image to the PDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.multi_cell(0, 10, story_content)
+
+        # Add the generated image to the PDF
+        pdf.image(output_image_path, x=10, y=pdf.get_y() + 10, w=100)
+
+        # Output the PDF
+        pdf_output = io.BytesIO()
+        pdf_output.write(pdf.output(dest="S").encode("latin1"))
+        pdf_bytes = pdf_output.getvalue()
+
+        filename = "story.pdf"
+
+        # Create a download button for the PDF file
+        st.download_button(
+            label="Download PDF",
+            data=pdf_bytes,
+            file_name=filename,
+            mime="application/pdf",
+        )
 
 
 if __name__ == "__main__":
     if is_verified():
-        st.write("Sorry you cannot access the story book because you need to log in first :)")
+        st.write("Sorry you cannot access the storybook because you need to log in first :)")
     else:
         main()
