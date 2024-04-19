@@ -1,6 +1,7 @@
+from commonfunctions import get_logged_in_username
+from dotenv import load_dotenv
 import google.auth.transport.requests
 from google.cloud import bigquery
-from dotenv import load_dotenv
 import google.generativeai as genai
 import os
 import streamlit as st
@@ -14,7 +15,7 @@ def main():
 
     st.write(
         f"""
-        # Welcome to the Academic Advising Portal, {st.session_state.username}👋!
+        # Welcome to the Academic Advising Portal, {get_logged_in_username()}👋!
 
         This resource streamlines and enhances the academic advising experience for students by 
         leveraging the power of generative AI with tailor-made guidance and advising based on 
