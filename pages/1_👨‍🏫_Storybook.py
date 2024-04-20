@@ -3,7 +3,6 @@ import google.generativeai as genai
 from PIL import Image
 from io import BytesIO
 from commonfunctions import is_verified
-from commonfunctions import get_logged_in_username
 from google.cloud import bigquery
 from datetime import datetime
 from fpdf import FPDF
@@ -15,13 +14,14 @@ import io
 
 client = bigquery.Client('joemotatechx2024')
 
-def create_pdf(story,output_image_path,):
+def create_pdf(story,output_image_path):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 10, story)
 
-    pdf.image(output_image_path, x=10, y=pdf.get_y() + 10, w=100)
+    pdf.add_page()
+    pdf.image(output_image_path, x=10, y=pdf.get_y() + 10, w=150)
 
     pdf_output = io.BytesIO()
     pdf_output.write(pdf.output(dest="S").encode("latin1"))
@@ -66,7 +66,7 @@ def generate_prompt_for_image_generation(story_content):
     text_model = genai.GenerativeModel('gemini-pro')
 
     # Add generated story contents to the prompt
-    prompt = "create a simple prompt for Google's text to image generation api to understand this story and doesnt give me this error: This prompt contains words that violate Vertex AI's usage guidelines. Story Book: "
+    prompt = "Create a single sentence prompt for Google's text to image generation api to generate an image for this Story Book. Start with the following words: Generate ..."
 
     prompt += " ".join(story_content)
     # Generate text content based on the prompt
@@ -113,24 +113,25 @@ def generate_storybook(prompt, image_contents):
     text_model = genai.GenerativeModel('gemini-pro')
 
     # Add generated image contents to the prompt
-    prompt += " ".join(image_contents)
+    if len(image_contents) > 1:
+        prompt += " ".join(image_contents)
 
     # Generate text content based on the prompt
     text_response = text_model.generate_content(prompt)
 
     return text_response.text
 
-def get_last_two_stories(username):
+def get_last_ten_stories(username):
     # Define the BigQuery table ID
     table_id = "joemotatechx2024.storybook.user_stories"
 
-    # Construct the SQL query to retrieve the last two stories for the given username
+    # Construct the SQL query to retrieve the last ten stories for the given username
     query = f"""
         SELECT story_name, story
         FROM `{table_id}`
         WHERE username = @username
         ORDER BY timestamp DESC
-        LIMIT 2
+        LIMIT 10
     """
 
     # Set up the query parameters
@@ -145,22 +146,12 @@ def get_last_two_stories(username):
     results = query_job.result()
 
     # Process the results
-    stories = []
-    for i, row in enumerate(results):
-        story_name = row["story_name"]
-        story_content = row["story"]
-        output_image_path = f"image_output{i+2}.png"
-        generate_image_from_text(story_content, output_image_path)
-        stories.append({
-            "story_name": story_name,
-            "story": story_content,
-            "image_path": output_image_path
-        })
+    stories = [{"story_name": row["story_name"], "story": row["story"]} for row in results]
 
     return stories
 
 def main():
-    username = get_logged_in_username()
+    username = st.session_state.edu_id
 
     if username:
         st.title(f"Welcome to the Storybook Generator {username}!")
@@ -189,18 +180,23 @@ def main():
     st.header("Customizations")
     customization = st.text_area("Add any customizations or specific points you want to get across in the storybook or how many pages you want in the story book etc.:")
 
+    #save all the image link
+    output_image_path = "output_image.png"
+
     # Generate Button
-    if st.button("Generate") and uploaded_photos:
+    if st.button("Generate"):
         prompt = f"Generate a storybook on the subject of {selected_subject} for {selected_grade} grade. Special Requests: {customization}. Make sure to provide a title to the story"
 
+        image_contents = ""
         # Generate image contents
-        image_contents = generate_image_contents(uploaded_photos)
+        if uploaded_photos:
+            # Generate image contents
+            image_contents = generate_image_contents(uploaded_photos)
         
         # Generate storybook content
         story_content = generate_storybook(prompt, image_contents)
 
         # Generate an image from the story content
-        output_image_path = "output_image.png"
         generate_image_from_text(str(story_content), output_image_path)
 
         # Display generated content
@@ -209,7 +205,7 @@ def main():
 
         pdf_bytes = create_pdf(story_content,output_image_path)
 
-        filename = "story.pdf"
+        filename = f"{story_name}.pdf"
 
         insert_data_into_bigquery(username, story_name, story_content)
 
@@ -224,17 +220,22 @@ def main():
     # Library Section    
     st.header("Library")
 
-    # Get the last two stories for the user
-    last_two_stories = get_last_two_stories(username)
+    # Get the last ten stories for the user
+    last_ten_stories = get_last_ten_stories(username)
 
-    if last_two_stories:
-        for i, story in enumerate(last_two_stories):
-            st.subheader(f"Story {i+1}: {story['story_name']}")
-            st.write(story['story'])
-            image = Image.open(story['image_path'])
-            st.image(image, caption='Story Image')
+    if last_ten_stories:
+        story_names = [story["story_name"] for story in last_ten_stories]
+        selected_story_name = st.selectbox("Select a story:", story_names)
+        
+        if selected_story_name:
+            selected_story = next((story for story in last_ten_stories if story["story_name"] == selected_story_name), None)
+            if selected_story:
+                if st.button("Generate Past Story"):
+                    # Display the selected story content
+                    generate_image_from_text(selected_story["story"], output_image_path)
+                    display_story(selected_story["story"], output_image_path)
     else:
-        st.write("You have no stories yet.")
+        st.write("You have no stories created yet.")
     
 
 if __name__ == "__main__":
