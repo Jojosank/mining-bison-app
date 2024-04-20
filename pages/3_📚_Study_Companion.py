@@ -7,12 +7,13 @@ import pdfplumber
 import io
 import calendar
 from datetime import datetime
-
+from dotenv import load_dotenv
+from fpdf import FPDF
+import bcrypt
 
 client = bigquery.Client(project='paolaalvaradotechx2024')
 
 def main_page():
-  
    # Input field for student's name
    student_name = st.sidebar.text_input("Enter your name", key="student_name_input")
 
@@ -401,10 +402,26 @@ page_names_to_funcs = {
    "Create Homework": create_homework
 }
 
-
 # Set the default value for the selectbox to "Main Page"
 selected_page = st.sidebar.selectbox(" ", page_names_to_funcs.keys(), index=0)
 
-
 # Call the function corresponding to the selected page
 page_names_to_funcs[selected_page]()
+
+if __name__ == "__main__":
+    if st.session_state.status != "verified":
+        st.write("Please log in first")
+    else:
+        main()  
+        st.sidebar.button("Log Out", on_click=log_out)
+
+def is_verified():
+  return st.session_state.status != "verified"
+
+#get the curr username
+def get_username():
+  return st.session_state.edu_id
+
+#logout function
+def log_out():
+  st.session_state.status = "unverified"
