@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 from io import BytesIO
-from commonfunctions import is_verified
+from commonfunctions import is_verified,get_username,log_out,log_in_message,log_in_image
 from google.cloud import bigquery
 from datetime import datetime
 from fpdf import FPDF
@@ -254,6 +254,7 @@ def main():
 
 if __name__ == "__main__":
     if is_verified():
-        st.write("Sorry you cannot access the storybook because you need to log in first :)")
+        log_in_message()
+        log_in_image()
     else:
         main()

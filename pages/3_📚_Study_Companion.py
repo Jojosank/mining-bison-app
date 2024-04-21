@@ -1,5 +1,5 @@
 import streamlit as st
-from commonfunctions import get_username,is_verified,log_out
+from commonfunctions import is_verified,get_username,log_out,log_in_message,log_in_image
 from google.cloud import bigquery
 import google.generativeai as genai
 import vertexai
@@ -435,7 +435,8 @@ def main():
 
 if __name__ == "__main__":
     if is_verified():
-        st.write("Sorry you cannot access the storybook because you need to log in first :)")
+        log_in_message()
+        log_in_image()
     else:
         main()
 
