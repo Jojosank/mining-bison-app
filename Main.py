@@ -1,7 +1,7 @@
 import bcrypt
 import streamlit as st
 from google.cloud import bigquery
-
+from commonfunctions import*
 client = bigquery.Client('joemotatechx2024')
 
 st.set_page_config(
@@ -82,21 +82,23 @@ if __name__ == "__main__":
     else:
         welcome()
 
-        st.write("# Welcome to Project MB ⛏️🦬!", st.session_state.edu_id + "!")
+        st.write("# Welcome to Project MB ⛏️🦬!", get_username() + "!")
 
         st.sidebar.success("Select a demo above.")
 
-        st.markdown(
-            """
-            The purpose of our proposed system is to provide comprehensive support and tools for educators, students, and learners in academic environments. The system comprises three key components, each targeting specific user needs:
+        st.write("The purpose of our proposed system is to provide comprehensive support and tools for educators, students, and learners in academic environments. The system comprises three key components, each targeting specific user needs:")
 
-            1. Storybook Generator for Teachers:
-            The first component focuses on assisting teachers by automating the creation of interactive storybooks. This feature enables teachers to develop engaging and educational content for their students, fostering creativity and enhancing learning experiences.
+        st.title("Miner the Story Teller")
 
-            2. Academic Advising and Course Recommendation for Students:
-            The second component is designed to aid students in making informed decisions about their academic journey. Students can receive guidance on course selections, career pathways, and educational goals through personalized recommendations and academic advising functionalities.
+        st.write("Empower but not limited to teachers to create captivating and educational storybooks effortlessly. This feature automates the process of generating interactive storybooks, allowing teachers to focus on fostering creativity and enhancing learning experiences.")
 
-            3. Interactive Notebook with Learning Support:
-            The third component aims to empower learners with interactive tools for note-taking, content summarization, flashcard creation, and practice quizzes. This component enhances the learning process by providing dynamic and engaging resources for self-study and revision.
-        """
-        )
+        st.title("Academic Advising")
+
+        st.write("Support students in making informed decisions about their academic journey. With personalized recommendations and academic advising functionalities, students can navigate course selections, career pathways, and educational goals with confidence.")
+        
+        st.title("Study Companion")
+
+        st.write("Provide learners with dynamic tools for effective self-study and revision. Our interactive notebook offers features such as note-taking, content summarization, flashcard creation, and practice quizzes, enhancing the learning process and promoting engagement.")
+
+        generate_image("Generate an image of a Miner and Bison combined")
+        
