@@ -14,79 +14,98 @@ import bcrypt
 client = bigquery.Client(project='paolaalvaradotechx2024')
 
 def main_page():
-   # Input field for student's name
-   student_name = st.sidebar.text_input("Enter your name", key="student_name_input")
+   st.session_state.username = st.session_state.get("username", "<user_name_goes_here>")
 
-
-   if student_name:
-       st.session_state['student_name'] = student_name
-       st.sidebar.success("Welcome!")
-
+   st.write(
+        f"""
+        # Welcome to your Study Companion {st.session_state.username}!""")
 
    image_url1 = "https://i.pinimg.com/474x/f5/48/5d/f5485d686f3913957ad6a3c3084b7db3.jpg"
        # Display the image using st.image
    st.sidebar.image(image_url1,)
 
-
    # Display the image using st.image
    image_url = "https://i.pinimg.com/564x/42/c0/2a/42c02af84fac1f5a1f4b36b46de807fd.jpg"
    st.image(image_url,)
-
-
    st.markdown("# Studio Ghibli Companion")
    st.sidebar.markdown(" ")
-
-
    # Button for "How to use this app?"
    how_to_button = st.button("How to use this app?", key="how_to_button")
 
-
    # Show "How to use this app?" content when the button is clicked
    if how_to_button:
-       st.markdown("""
-       Welcome to the Studio Ghibli Companion! This app is designed to help you manage your courses, homework, notes, and more in a user-friendly way. Here's how to get started:
+    st.markdown("""
+    ## How to Use This App
 
+    Welcome to the Studio Ghibli Companion! This app is designed to help you manage your courses, homework, notes, and more in a user-friendly way. Here's a step-by-step guide to get started:
 
-       - **Home Page:** Start from the home page, where you'll find an overview of the app's features and a guide on how to use it effectively.
-       - **Courses Page:** Click on the 'Courses' button to access your courses. Here, you can create new courses, upload syllabuses, and manage your course schedule.
-       - **Creating a New Course:** Navigate to the 'Create Course' page. Enter the course name and description. Upload the course syllabus (PDF format). Click 'Create Course' to add it to your list of courses.
-       - **Homework & Notes Page:** Use this page to upload and manage your homework assignments, notes, and other study materials.
-       - **Calendar Integration:** Access your calendar to set important dates for your courses and assignments. This helps you stay organized and on track.
-       - **AI-Powered Assistance:** Ask questions using the AI-powered content generator to get quick responses and assistance with your studies.
-       - **Customize Your Experience:** Explore the sidebar for additional features and options tailored to your needs.
-       """)
+    ### 1. Home Page
+    - Start from the home page, where you'll find an overview of the app's features and a guide on how to use it effectively.
+
+    ### 2. Courses Page
+    - Click on the 'Courses' button in the sidebar to access your courses. Here, you can manage your course schedule.
+
+    ### 3. Homework & Notes Page
+    - Use this page to manage your homework assignments, notes, and other study materials.
+
+    ### 4. Create New Course
+    - Navigate to the 'Create Course' page from the sidebar. Enter the course name, description, and upload the course syllabus (PDF format). Click 'Save Course' to add it to your list of courses.
+
+    ### 5. Take Notes
+    - Click on 'Take Notes' in the sidebar to start taking notes for your courses. Enter the course name and your notes, then click 'Save Notes' to store them securely.
+
+    ### 6. Create New Homework
+    - Access the 'Create Homework' page from the sidebar. Enter the course name, homework content, and select the due date. Click 'Save Homework' to add it to your assignments.
+
+    ### 7. AI-Powered Assistance
+    - Use the AI-powered features like generating notes, summaries, quizzes, and answering general questions. Enter your query and select the appropriate option to get instant assistance.
+
+    Enjoy using the Studio Ghibli Companion app for a seamless academic experience!
+    """)
        # Button for "About this app"
    about_button = st.button("About this app", key="about_button")
 
 
    # Show "About this app" content when the button is clicked
    if about_button:
-       st.markdown("""
-       This notebook application’s purpose is to help the student by keeping them organized with their note-taking. They will be able to set their courses in these sections and in them will hold their notebook for that specific class.
-       """)
-   # selected_date = st.date_input("Select a date")
+    st.markdown("""
+    ## About This App
 
+    Welcome to the Studio Ghibli Companion web app! This app is designed to enhance your academic experience by providing tools and features to manage your courses, assignments, notes, and more. Here's a brief overview:
+
+    ### Features:
+    - **Courses Management:** Create, edit, and manage your courses with ease.
+    - **Homework Tracker:** Keep track of your homework assignments and due dates.
+    - **Notes Organizer:** Take and organize notes for each of your courses.
+    - **AI-Powered Assistance:** Get quick answers, summaries, and quiz generation with AI.
+    - **User-friendly Interface:** Designed for a seamless and intuitive user experience.
+
+    ### How to Use:
+    - Explore the sidebar for different sections like Courses, Homework, Notes, and AI Assistance.
+    - Use the buttons and input fields to interact with the app's features.
+    - Click on "How to use this app?" for a detailed guide on using each feature.
+
+    ### Privacy and Security:
+    - Your data is securely stored and accessible only to you.
+    - Log out from the sidebar when you're done to ensure your account's security.
+    """)
+   # selected_date = st.date_input("Select a date")
 
    # if selected_date:
    #     st.write(f"You selected: {selected_date}")
 
-
    # Display the calendar on the home page
   # display_calendar()
 
-
    # topics = ["", "Math", "Science", "History", "English", "Computer Science", "Art"]
-
 
    # if topics:
    # # Display the select box for choosing topics
    #     selected_topic = st.selectbox("Select a topic you need help with", topics)
 
-
    # # Display the selected topic
    # if selected_topic:
    #     st.write(f"You selected: {selected_topic}")
-
 
 if 'courses' not in st.session_state:
     st.session_state.courses = []
@@ -146,6 +165,8 @@ def save_course_to_bigquery(course_data):
         st.success("Course saved successfully.")
 
 def create_course():
+    image_url1 = "https://i.pinimg.com/474x/90/91/66/909166632963c38c1c6ddceb2d665be0.jpg"
+    st.sidebar.image(image_url1,)
     st.markdown("# Create New Course")
 
     # Input fields for course details
@@ -176,7 +197,7 @@ def page2():
                 st.write(f"**{course['course_name']}**")
                 st.write(f"Description: {course['description']}")
 
-    image_url1 = "https://i.pinimg.com/564x/07/e1/83/07e1833490e7233b14022d76a33f63e2.jpg"
+    image_url1 = "https://i.pinimg.com/474x/7c/ba/df/7cbadf06fabf2bee9d629a02be5fd7c2.jpg"
     st.sidebar.image(image_url1)
     st.sidebar.caption("You got this!")
 
@@ -215,6 +236,8 @@ def create_homework():
    
    st.markdown("# Create New Homework")
 
+   image_url1 = "https://i.pinimg.com/564x/ce/82/50/ce825004db3537dd8e42e23ebd261a5a.jpg"
+   st.sidebar.image(image_url1,)
    # Input fields for homework details
    course_name = st.text_input("Enter course name")
    homework_content = st.text_area("Enter homework content")
@@ -259,8 +282,8 @@ def create_homework():
 
 
 def page3():
-   image_url1 = "https://i.pinimg.com/564x/dc/85/ad/dc85ad2f9f21c8210d33cb4345c47deb.jpg"
-   st.image(image_url1,)
+#    image_url1 = "https://i.pinimg.com/564x/dc/85/ad/dc85ad2f9f21c8210d33cb4345c47deb.jpg"
+#    st.image(image_url1,)
    st.markdown("# Homework")
    image_url1 = "https://i.pinimg.com/474x/54/09/dc/5409dc6dc6ed4e7e32e1b138f4ccbe74.jpg"
    st.sidebar.image(image_url1,)
@@ -408,12 +431,7 @@ selected_page = st.sidebar.selectbox(" ", page_names_to_funcs.keys(), index=0)
 # Call the function corresponding to the selected page
 page_names_to_funcs[selected_page]()
 
-if __name__ == "__main__":
-    if st.session_state.status != "verified":
-        st.write("Please log in first")
-    else:
-        main()  
-        st.sidebar.button("Log Out", on_click=log_out)
+
 
 def is_verified():
   return st.session_state.status != "verified"
@@ -425,3 +443,5 @@ def get_username():
 #logout function
 def log_out():
   st.session_state.status = "unverified"
+if st.sidebar.button("Log Out", key="logout_button"):
+    log_out()
