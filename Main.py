@@ -1,10 +1,10 @@
 import streamlit as st
 import bcrypt
+from commonfunctions import update_logout_status,get_logged_in_username
+import streamlit as st
 from google.cloud import bigquery
 
 client = bigquery.Client('joemotatechx2024')
-
-
 
 st.set_page_config(
             page_title="Main",
@@ -13,6 +13,24 @@ st.set_page_config(
 
 st.session_state.status = st.session_state.get("status", "unverified")
 
+def update_login_status(username):
+    """
+    Updates the login status to 'YES' for the given username.
+
+    Args:
+    - username (str): The username for which the login status should be updated.
+    """
+    update_query = f"""
+        UPDATE `joemotatechx2024.user_data.user_login`
+        SET logged_in = 'YES'
+        WHERE username = @username
+    """
+    update_job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("username", "STRING", username)
+        ]
+    )
+    client.query(update_query, job_config=update_job_config)
 
 def get_hashed_password(plain_text_password):
     # Hash a password for the first time
@@ -36,46 +54,11 @@ def check_password():
         for row in rows:
             if bcrypt.checkpw(st.session_state.password.encode('utf-8'), row.hashed_password.encode('utf-8')):
                 # Update logged_in to YES if password matches
-                update_query = f"""
-                    UPDATE `joemotatechx2024.user_data.user_login`
-                    SET logged_in = 'YES'
-                    WHERE username = @username
-                """
-                update_job_config = bigquery.QueryJobConfig(
-                    query_parameters=[
-                        bigquery.ScalarQueryParameter("username", "STRING", st.session_state.username)
-                    ]
-                )
-                client.query(update_query, job_config=update_job_config)
+                update_login_status(st.session_state.username)
                 st.session_state.status = "verified"
-
-                #Check if username already exists in storybook dataset
-                check_duplicate_query = f"""
-                    SELECT * FROM `joemotatechx2024.storybook.user_input_output` WHERE username = @username
-                """
-                check_job_config = bigquery.QueryJobConfig(
-                    query_parameters=[
-                        bigquery.ScalarQueryParameter("username", "STRING", st.session_state.username),
-                    ]
-                )
-                check_query_job = client.query(check_duplicate_query, job_config=check_job_config)
-                check_rows = check_query_job.result()
-                if check_rows.total_rows == 0:
-                    # Insert username if not a duplicate
-                    insert_query = f"""
-                        INSERT INTO `joemotatechx2024.storybook.user_input_output` (username)
-                        VALUES (@username)
-                    """
-                    insert_job_config = bigquery.QueryJobConfig(
-                        query_parameters=[
-                            bigquery.ScalarQueryParameter("username", "STRING", st.session_state.username),
-                        ]
-                    )
-                    client.query(insert_query, job_config=insert_job_config)
                 return  # Exit function after successful login and update
     if st.session_state.status != "verified":
         st.session_state.status = "incorrect"
-
 
 def login_prompt():
     st.text_input("Enter username:", key="username")
@@ -87,10 +70,9 @@ def login_prompt():
     if st.session_state.status == "user_already_exists":
         st.warning("Username already exists")
 
-
 def logout():
+    update_logout_status(get_logged_in_username())
     st.session_state.status = "unverified"
-
 
 def create_user():
     QUERY = ("SELECT hashed_password FROM `joemotatechx2024.user_data.user_login` WHERE username = '" +
@@ -113,12 +95,9 @@ def create_user():
     else:
         st.session_state.status = "user_already_exists"
 
-
 def welcome():
     st.success("Login successful.")
     st.button("Log out", on_click=logout)
-
-
 
 if __name__ == "__main__":
     if st.session_state.status != "verified":
