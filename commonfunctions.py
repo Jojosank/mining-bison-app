@@ -14,6 +14,7 @@ def get_username():
 #logout function
 def log_out():
   st.session_state.status = "unverified"
+  st.rerun()
 
 def log_in_message():
   st.title("Sorry, you cannot access the app until you log in.")

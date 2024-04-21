@@ -13,6 +13,7 @@ import base64
 import io
 
 client = bigquery.Client('joemotatechx2024')
+st.set_page_config(layout='wide')
 
 def create_pdf(story,output_image_path):
     pdf = FPDF()
@@ -58,6 +59,7 @@ def insert_data_into_bigquery(username, story_name, story_content):
     else:
         print("Data inserted successfully into BigQuery table.")
 
+
 def generate_prompt_for_image_generation(story_content):
     api_key = "AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug"
     genai.configure(api_key=api_key)
@@ -78,17 +80,23 @@ def generate_prompt_for_image_generation(story_content):
     
     return text_response.text
 
-def generate_image_from_text(story_content, output_image_path):
-    # Initialize the image generation model
-    vertexai.init(project="joemotatechx2024", location="us-central1")
-    model = ImageGenerationModel.from_pretrained("imagegeneration@006")
-    
-    promptInfo = generate_prompt_for_image_generation(story_content)
-    # Generate the image based on the text
-    images = model.generate_images(prompt=promptInfo, number_of_images=1)
-    
-    # Save the generated image
-    images[0].save(location=output_image_path, include_generation_parameters=False)
+def generate_image_from_text(story_content, output_image_path, generated):
+    try:
+        # Initialize the image generation model
+        vertexai.init(project="joemotatechx2024", location="us-central1")
+        model = ImageGenerationModel.from_pretrained("imagegeneration@006")
+        
+        promptInfo = generate_prompt_for_image_generation(story_content)
+        # Generate the image based on the text
+        images = model.generate_images(prompt=promptInfo, number_of_images=1)
+        
+        # Save the generated image
+        images[0].save(location=output_image_path, include_generation_parameters=False)
+        return
+    except Exception:
+        generated = False
+        st.error("Sorry we couldnt generate the image. Please try generating again")
+        return
 
 def generate_image_contents(uploaded_photos):
     api_key = "AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug" 
@@ -154,78 +162,102 @@ def get_all_stories(username):
     return stories
 
 def main():
+
+    if st.sidebar.button("Log Out"):
+        log_out()
+
+    generated = True
+
+    st.markdown(
+        """
+        <div style="position: relative; background-color: #FFA421; padding: 1px 0;">
+            <h1 style='font-size: 75px; margin: 0; color: white; text-align: center; position: relative; z-index: 2; width: 100%;'>Miner the Story Teller</h1>
+            <img src="https://seeklogo.com/images/U/utep-miners-logo-A773F61820-seeklogo.com.png" class="logo" style="position: absolute; top: 20px; left: 20px; z-index: 3; width: 200px; height: auto;">
+            <div style="height: 40px; background-color: #FFA421; position: absolute; bottom: 0; left: 0; width: 100%; z-index: 1;"></div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     username = st.session_state.edu_id
 
-    if username:
-        st.title(f"Welcome to the Storybook Generator {username}!")
-    else:
-        st.title("Welcome to the Storybook Generator!")
+    st.markdown(f"<p style='text-align: center; font-size: 55px; color: white; font-weight: bold;'>Let's create your Story {username}!</p>",unsafe_allow_html=True)
 
-    # Text input section for storybook name
-    st.header("Storybook Name")
-    story_name = st.text_input("Enter the storybook name:")
+    st.markdown("#")
 
-    # File uploader section for photos
-    st.header("Upload Photos")
-    uploaded_photos = st.file_uploader("Upload photos for the storybook", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+    st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Name Your Book</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Give your Story Book a Name</p>", unsafe_allow_html=True)
+    story_name = st.text_input("Enter Story Book name below")
 
-    # Dropdown menu for subjects
-    st.header("Subject Selection")
-    subject_options = ["Math", "Science", "English Language Arts", "Social Studies/History", "Physical Education"]
-    selected_subject = st.selectbox("Select a subject:", subject_options, index=0)
+    st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Upload Content</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>AI analysis regarding their relevance to the story</p>", unsafe_allow_html=True)
+    uploaded_photos = st.file_uploader("Upload photos for the Story Book", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-    # Dropdown menu for grade levels
-    st.header("Grade Level")
-    grade_options = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"]
-    selected_grade = st.selectbox("Select a grade level:", grade_options, index=0)
+    # Divide the file upload and Help section into two cols so they can be next to each other
+    col1, col2  = st.columns(2)  # Adjust the width of the columns as needed
 
-    # Customization section
-    st.header("Customizations")
-    customization = st.text_area("Add any customizations or specific points you want to get across in the storybook or how many pages you want in the story book etc.:")
+    selected_subject = ""
+    with col1:
+        st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Subject</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Base your story off a specific subject</p>", unsafe_allow_html=True)
+        subject_options = ["Math", "Science", "English Language Arts", "Social Studies/History", "Physical Education"]
+        selected_subject = st.selectbox("Select a subject:", subject_options, index=0)
+    
+    selected_grade = ""
+    with col2:
+        st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Grade Level</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Cater you grammer to your Grade Level</p>", unsafe_allow_html=True)
+        grade_options = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"]
+        selected_grade = st.selectbox("Select a grade level:", grade_options, index=0)
 
-    #save all the image link
+    st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Specail Requests</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Add any input or customizations to influence the output of the Story Book</p>", unsafe_allow_html=True)
+    customization = st.text_area("Customizations or specific requests for the storybook:")
+
+
+
     output_image_path = "output_image.png"
 
-    # Generate Button
     if st.button("Generate"):
-        prompt = f"Generate a storybook on the subject of {selected_subject} for {selected_grade} grade. Special Requests: {customization}. Make sure to provide a title to the story"
+        if not story_name:
+            st.warning("Please enter a story name.")
+        else:
+            prompt = f"Generate a storybook on the subject of {selected_subject} for {selected_grade} grade. Special Requests: {customization}. Make sure to provide a title to the story"
 
-        image_contents = ""
-        # Generate image contents
-        if uploaded_photos:
+            image_contents = ""
             # Generate image contents
-            image_contents = generate_image_contents(uploaded_photos)
-        
-        # Generate storybook content
-        story_content = generate_storybook(prompt, image_contents)
+            if uploaded_photos:
+                # Generate image contents
+                image_contents = generate_image_contents(uploaded_photos)
+            
+            # Generate storybook content
+            story_content = generate_storybook(prompt, image_contents)
 
-        # Generate an image from the story content
-        generate_image_from_text(str(story_content), output_image_path)
+            # Generate an image from the story content
+            generate_image_from_text(str(story_content), output_image_path, generated)
+            if not generated:
+                generated = True
+            else:
+                # Display generated content
+                st.success("Storybook generated successfully!")
+                display_story(story_content, output_image_path)
 
-        # Display generated content
-        st.success("Storybook generated successfully!")
-        display_story(story_content, output_image_path)
+                pdf_bytes = create_pdf(story_content,output_image_path)
 
-        pdf_bytes = create_pdf(story_content,output_image_path)
+                filename = f"{story_name}.pdf"
 
-        filename = f"{story_name}.pdf"
+                #Save your story into big Query
+                insert_data_into_bigquery(username, story_name, story_content)
+                # Create a download button for the PDF file
+                
+                st.download_button(
+                    label="Download PDF",
+                    data=pdf_bytes,
+                    file_name=filename,
+                    mime="application/pdf",
+                )
+    st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Library</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Checkout all your previously created Story Books</p>", unsafe_allow_html=True)
 
-        #Save your story into big Query
-        if st.button("Save your Story Book"):
-            insert_data_into_bigquery(username, story_name, story_content)
-
-        # Create a download button for the PDF file
-        st.download_button(
-            label="Download PDF",
-            data=pdf_bytes,
-            file_name=filename,
-            mime="application/pdf",
-        )
-        
-    # Library Section    
-    st.header("Library")
-
-    # Get the last ten stories for the user
     users_stories = get_all_stories(username)
 
     if users_stories:
@@ -237,18 +269,21 @@ def main():
             if selected_story:
                 if st.button("Generate Past Story"):
                     # Generate and display the image for the selected story
-                    generate_image_from_text(selected_story["story"], output_image_path)
-                    display_story(selected_story["story"], output_image_path)
-                
-                    # Create and download the PDF for the selected story
-                    pdf_bytes = create_pdf(selected_story["story"], output_image_path)
-                    filename = f"{selected_story_name}.pdf"
-                    st.download_button(
-                        label="Download PDF",
-                        data=pdf_bytes,
-                        file_name=filename,
-                        mime="application/pdf",
-                    )
+                    generate_image_from_text(selected_story["story"], output_image_path,generated)
+                    if not generated:
+                        generated = True
+                    else:
+                        display_story(selected_story["story"], output_image_path)
+                    
+                        # Create and download the PDF for the selected story
+                        pdf_bytes = create_pdf(selected_story["story"], output_image_path)
+                        filename = f"{selected_story_name}.pdf"
+                        st.download_button(
+                            label="Download PDF",
+                            data=pdf_bytes,
+                            file_name=filename,
+                            mime="application/pdf",
+                        ) 
     else:
         st.write("You have no stories created yet.")
 

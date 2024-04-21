@@ -68,7 +68,7 @@ def create_user():
         QUERY = (myquery)
         query_job = client.query(QUERY)  
         rows = query_job.result()  
-        st.session_state.status = "unverified"
+        st.session_state.status = "verified"
     else:
         st.session_state.status = "user_already_exists"
 
