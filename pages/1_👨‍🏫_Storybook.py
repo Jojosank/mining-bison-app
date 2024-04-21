@@ -6,7 +6,6 @@ from commonfunctions import is_verified,get_username,log_out,log_in_message,log_
 from google.cloud import bigquery
 from datetime import datetime
 from fpdf import FPDF
-from reportlab.pdfgen import canvas
 import vertexai
 from vertexai.preview.vision_models import ImageGenerationModel
 import base64
