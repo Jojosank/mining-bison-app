@@ -1,53 +1,33 @@
 import streamlit as st
 from google.cloud import bigquery
+import vertexai
+from vertexai.preview.vision_models import ImageGenerationModel
 
+#check is user has logged in else show the Message to log in
 def is_verified():
   return st.session_state.status != "verified"
 
-#grab user name thats logged in
-def get_logged_in_username():
-    client = bigquery.Client('joemotatechx2024')
+#get the curr username
+def get_username():
+  return st.session_state.edu_id
 
-    # Query user_login table to find the logged-in user
-    query = """
-    SELECT username
-    FROM joemotatechx2024.user_data.user_login
-    WHERE logged_in = 'YES'
-    """
+#logout function
+def log_out():
+  st.session_state.status = "unverified"
+  st.rerun()
 
-    # Execute the query
-    query_job = client.query(query)
+def log_in_message():
+  st.title("Sorry, you cannot access the app until you log in.")
 
-    # Fetch the result
-    result = query_job.result()
-
-    # Extract the username
-    for row in result:
-        username = row.username
-        return username
-
-    return None  # Return None if no logged-in user is found
-
-#update logout info
-def update_logout_status(username):
-    """
-    Updates the login status to 'NO' for the given username.
-
-    Args:
-    - username (str): The username for which the login status should be updated.
-    """
-    client = bigquery.Client('joemotatechx2024')
-
-    update_query = f"""
-        UPDATE `joemotatechx2024.user_data.user_login`
-        SET logged_in = 'NO'
-        WHERE username = @username
-    """
-    update_job_config = bigquery.QueryJobConfig(
-        query_parameters=[
-            bigquery.ScalarQueryParameter("username", "STRING", username)
-        ]
-    )
-    client.query(update_query, job_config=update_job_config)
-
-    query_job = client.query(update_query)
+def log_in_image():
+  prompt = "Generate an image of education"
+  vertexai.init(project="paolaalvaradotechx2024", location="us-central1")
+  # Load the Image Generation model
+  model = ImageGenerationModel.from_pretrained("imagegeneration@005")
+  # Generate images based on the user's prompt
+  image = model.generate_images(prompt=prompt, number_of_images=1)
+  if image:
+    # Save the generated image to a file
+    image[0].save(location="samplefile.jpg")
+    # Display the generated image
+    st.image("samplefile.jpg")
