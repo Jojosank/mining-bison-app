@@ -16,4 +16,4 @@ RUN pip3 install -r requirements.txt
 EXPOSE 8501
 
 # Run streamlit when the container launches
-CMD streamlit run main.py --server.port $PORT --server.enableCORS=false
+CMD streamlit run Main.py --server.port $PORT --server.enableCORS=false
