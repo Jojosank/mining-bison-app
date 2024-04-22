@@ -58,7 +58,6 @@ def insert_data_into_bigquery(username, story_name, story_content):
     else:
         print("Data inserted successfully into BigQuery table.")
 
-
 def generate_prompt_for_image_generation(story_content):
     api_key = "AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug"
     genai.configure(api_key=api_key)
@@ -73,13 +72,13 @@ def generate_prompt_for_image_generation(story_content):
     text_response = text_model.generate_content(prompt)
 
     # Access the text attribute of the GenerateContentResponse object
-    prompt = "Create a single sentence prompt for Google's text to image generation api to generate an image based on the main idea of this story. " + text_response.text + "Start with the following words, Generate an image.."
-
-    text_response = text_model.generate_content(prompt)
+    prompt = "Create a single sentence prompt for Google's text to image generation api to generate an image based on the main idea of this story. " + text_response.text + " Your prompt should be generate [Use only one Word]."
     
+    text_response = text_model.generate_content(prompt)
+    st.write(text_response.text)
     return text_response.text
 
-def generate_image_from_text(story_content, output_image_path, generated):
+def generate_image_from_text(story_content, output_image_path):
     try:
         # Initialize the image generation model
         vertexai.init(project="joemotatechx2024", location="us-central1")
@@ -91,11 +90,40 @@ def generate_image_from_text(story_content, output_image_path, generated):
         
         # Save the generated image
         images[0].save(location=output_image_path, include_generation_parameters=False)
-        return
+        return True
     except Exception:
-        generated = False
         st.error("Sorry we couldnt generate the image. Please try generating again")
-        return
+        return False
+
+def is_story_name_unique(username, story_name):
+    # Define the BigQuery table ID
+    table_id = "joemotatechx2024.storybook.user_stories"
+
+    # Construct the SQL query to check if the story name exists for the given username
+    query = f"""
+        SELECT COUNT(*) as count
+        FROM `{table_id}`
+        WHERE username = @username
+        AND story_name = @story_name
+    """
+
+    # Set up the query parameters
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("username", "STRING", username),
+            bigquery.ScalarQueryParameter("story_name", "STRING", story_name)
+        ]
+    )
+
+    # Execute the query
+    query_job = client.query(query, job_config=job_config)
+    results = query_job.result()
+
+    # Process the result count
+    count = next(iter(results)).get("count", 0)
+
+    # Return True if the count is 0 (meaning the story name is unique), otherwise False
+    return count == 0
 
 def generate_image_contents(uploaded_photos):
     api_key = "AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug" 
@@ -160,6 +188,8 @@ def get_all_stories(username):
 
     return stories
 
+generated = True
+
 def main():
 
     if st.sidebar.button("Log Out"):
@@ -170,7 +200,6 @@ def main():
     st.sidebar.title("Check out this demo below!")
     st.sidebar.video(video_bytes)
 
-    generated = True
 
     st.markdown(
         """
@@ -213,7 +242,7 @@ def main():
         grade_options = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"]
         selected_grade = st.selectbox("Select a grade level:", grade_options, index=0)
 
-    st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Specail Requests</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Special Requests</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Add any input or customizations to influence the output of the Story Book</p>", unsafe_allow_html=True)
     customization = st.text_area("Customizations or specific requests for the storybook:")
 
@@ -240,7 +269,10 @@ def main():
 
     if st.button("Generate"):
         if not story_name:
-            st.warning("Please enter a story name.")
+            st.error("Please enter a story name.")
+        if not is_story_name_unique(username, story_name):
+            st.error("This story name already exists. Please choose a different name.")
+            
         else:
             prompt = f"Generate a storybook on the subject of {selected_subject} for {selected_grade} grade. Special Requests: {customization}. Make sure to provide a title to the story"
 
@@ -254,10 +286,9 @@ def main():
             story_content = generate_storybook(prompt, image_contents)
 
             # Generate an image from the story content
-            generate_image_from_text(str(story_content), output_image_path, generated)
-            if not generated:
-                generated = True
-            else:
+            st.session_state.generated = generate_image_from_text(str(story_content), output_image_path)
+
+            if st.session_state.generated:
                 st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Preview</p>", unsafe_allow_html=True)
                 st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Checkout your Story Book</p>", unsafe_allow_html=True)
                 # Display generated content
@@ -270,6 +301,7 @@ def main():
 
                 #Save your story into big Query
                 insert_data_into_bigquery(username, story_name, story_content)
+                st.success("Added your story your Library")
 
                 # Create a download button for the PDF file
                 st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Finalize</p>", unsafe_allow_html=True)
