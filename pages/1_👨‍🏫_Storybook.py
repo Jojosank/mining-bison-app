@@ -2,11 +2,10 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 from io import BytesIO
-from commonfunctions import is_verified,get_username,log_out,log_in_message,log_in_image
+from commonfunctions import*
 from google.cloud import bigquery
 from datetime import datetime
 from fpdf import FPDF
-from reportlab.pdfgen import canvas
 import vertexai
 from vertexai.preview.vision_models import ImageGenerationModel
 import base64
@@ -165,6 +164,11 @@ def main():
 
     if st.sidebar.button("Log Out"):
         log_out()
+    video_file = open('HelpVideo.mp4', 'rb')
+    video_bytes = video_file.read()
+    st.sidebar.title("Need Help?")
+    st.sidebar.title("Check out this demo below!")
+    st.sidebar.video(video_bytes)
 
     generated = True
 
@@ -217,6 +221,23 @@ def main():
 
     output_image_path = "output_image.png"
 
+    button_style = """
+        <style >
+        .stDownloadButton, div.stButton {text-align:center}
+        .stDownloadButton button, div.stButton > button:first-child {
+            background-color: #FFA421;
+            color: #FF000;
+            padding-top: 30px;
+            padding-bottom: 30px;
+            padding-left: 150px;
+            padding-right: 150px;
+            font-weight: bold;
+        }
+        </style>
+    """
+    st.markdown(button_style, unsafe_allow_html=True)
+
+
     if st.button("Generate"):
         if not story_name:
             st.warning("Please enter a story name.")
@@ -237,6 +258,8 @@ def main():
             if not generated:
                 generated = True
             else:
+                st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Preview</p>", unsafe_allow_html=True)
+                st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Checkout your Story Book</p>", unsafe_allow_html=True)
                 # Display generated content
                 st.success("Storybook generated successfully!")
                 display_story(story_content, output_image_path)
@@ -247,14 +270,17 @@ def main():
 
                 #Save your story into big Query
                 insert_data_into_bigquery(username, story_name, story_content)
+
                 # Create a download button for the PDF file
-                
+                st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Finalize</p>", unsafe_allow_html=True)
+                st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Download your Story Book</p>", unsafe_allow_html=True)
                 st.download_button(
                     label="Download PDF",
                     data=pdf_bytes,
                     file_name=filename,
                     mime="application/pdf",
                 )
+
     st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Library</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Checkout all your previously created Story Books</p>", unsafe_allow_html=True)
 
@@ -290,6 +316,6 @@ def main():
 if __name__ == "__main__":
     if is_verified():
         log_in_message()
-        log_in_image()
+        generate_image("Generate an image of a Miner")
     else:
         main()

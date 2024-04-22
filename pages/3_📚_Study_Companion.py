@@ -1,5 +1,5 @@
 import streamlit as st
-from commonfunctions import is_verified,get_username,log_out,log_in_message,log_in_image
+from commonfunctions import*
 from google.cloud import bigquery
 import google.generativeai as genai
 import vertexai
@@ -436,7 +436,7 @@ def main():
 if __name__ == "__main__":
     if is_verified():
         log_in_message()
-        log_in_image()
+        generate_image("Generate an image of Study Buddy Robot")
     else:
         main()
 

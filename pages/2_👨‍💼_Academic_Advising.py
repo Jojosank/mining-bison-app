@@ -6,16 +6,16 @@ import google.generativeai as genai
 import os
 import streamlit as st
 import pandas as pd
-
+from commonfunctions import*
 
 credentials, project = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
 
 def main():
-    st.session_state.username = st.session_state.get("username", "<user_name_goes_here>")
+    username = get_username()
 
     st.write(
         f"""
-        # Welcome to the Academic Advising Portal, {get_logged_in_username()}👋!
+        # Welcome to the Academic Advising Portal, {username}👋!
 
         This resource streamlines and enhances the academic advising experience for students by 
         leveraging the power of generative AI with tailor-made guidance and advising based on 

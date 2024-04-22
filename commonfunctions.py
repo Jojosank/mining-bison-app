@@ -19,8 +19,7 @@ def log_out():
 def log_in_message():
   st.title("Sorry, you cannot access the app until you log in.")
 
-def log_in_image():
-  prompt = "Generate an image of education"
+def generate_image(prompt):
   vertexai.init(project="paolaalvaradotechx2024", location="us-central1")
   # Load the Image Generation model
   model = ImageGenerationModel.from_pretrained("imagegeneration@005")
