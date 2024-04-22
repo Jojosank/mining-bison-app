@@ -32,7 +32,7 @@ def display_story(story_content, output_image_path):
     st.write("Generated Storybook Content:")
     st.write(story_content)
     image = Image.open(output_image_path)
-    st.image(image, caption='Story Book Image')
+    st.image(image, caption='Story Book Image', use_column_width = True)
         
 
 def insert_data_into_bigquery(username, story_name, story_content):
@@ -216,10 +216,12 @@ def main():
     st.markdown(f"<p style='text-align: center; font-size: 55px; color: white; font-weight: bold;'>Let's create your Story {username}!</p>",unsafe_allow_html=True)
 
     st.markdown("#")
-
     st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Name Your Book</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Give your Story Book a Name</p>", unsafe_allow_html=True)
     story_name = st.text_input("Enter Story Book name below")
+    st.markdown("#")
+    if not story_name:
+        st.warning("Please enter a story name.")
 
     st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Upload Content</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>AI analysis regarding their relevance to the story</p>", unsafe_allow_html=True)
@@ -270,7 +272,7 @@ def main():
     if st.button("Generate"):
         if not story_name:
             st.error("Please enter a story name.")
-        if not is_story_name_unique(username, story_name):
+        elif not is_story_name_unique(username, story_name):
             st.error("This story name already exists. Please choose a different name.")
             
         else:

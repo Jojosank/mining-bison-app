@@ -1,0 +1,10 @@
+steps:
+  # Build the Docker image using the Dockerfile in the repository.
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/joemotatechx2024/ProjectMB', '.']
+  # Push the Docker image to Google Container Registry.
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/joemotatechx2024/ProjectMB']
+images:
+  - 'gcr.io/joemotatechx2024/ProjectMB'
+timeout: '1200s' # Set timeout to 20 minutes
