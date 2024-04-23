@@ -188,8 +188,6 @@ def get_all_stories(username):
 
     return stories
 
-generated = True
-
 def main():
 
     if st.sidebar.button("Log Out"):
@@ -329,9 +327,9 @@ def main():
             if selected_story:
                 if st.button("Generate Past Story"):
                     # Generate and display the image for the selected story
-                    generate_image_from_text(selected_story["story"], output_image_path,generated)
-                    if not generated:
-                        generated = True
+                    st.session_state.generated = generate_image_from_text(selected_story["story"], output_image_path)
+                    if not st.session_state.generated:
+                        st.session_state.generated = True
                     else:
                         display_story(selected_story["story"], output_image_path)
                     
