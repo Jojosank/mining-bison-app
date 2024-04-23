@@ -1,4 +1,3 @@
-from commonfunctions import get_logged_in_username
 from dotenv import load_dotenv
 import google.auth.transport.requests
 from google.cloud import bigquery
@@ -6,12 +5,13 @@ import google.generativeai as genai
 import os
 import streamlit as st
 import pandas as pd
-from commonfunctions import*
+from commonfunctions import * 
 
-credentials, project = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
 
 def main():
     username = get_username()
+
+    credentials, project = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
 
     st.write(
         f"""
@@ -45,23 +45,32 @@ def main():
     if uploaded_file is not None:
         # Read the file into a Pandas DataFrame
         df = pd.read_csv(uploaded_file)
+        st.write(df)
 
-
-        # Create a BigQuery client
         client = bigquery.Client(credentials=credentials, project=project)
 
+
         # Initialize IDs
-        dataset_id = "josephsankahtechx2024.checklist_dataset"
-        table_id = "josephsankahtechx2024.checklist_dataset.checklist_template"
+        table_id = f"josephsankahtechx2024.checklist_dataset.{username}_checklist_template"
 
+        # enable schema auto-detection 
+        job_config = bigquery.LoadJobConfig(
+            autodetect=True,
+            skip_leading_rows=1,
+            source_format=bigquery.SourceFormat.CSV,
+        )
 
-        # Get the Table object from the Dataset object
-        table = client.get_table(table_id)
+        try:
+            table = client.get_table(table_id)
+        except Exception as e:
+            table = bigquery.Table(table_id)
 
-        errors = client.insert_rows_json(table_id, df.to_dict('records'))
+        job = client.load_table_from_dataframe(
+            df, table_id, job_config=job_config
+        )  # Make an API request.
+        job.result()  # Wait for the job to complete.
 
-        if errors == []:
-            st.write("Data successfully uploaded to BigQuery.")
+        table = client.get_table(table_id) # Make an API request
 
 
     input_text = st.text_input(label="Enter your genai query...")
@@ -85,7 +94,8 @@ def main():
         st.write(response.text)
 
 if __name__ == "__main__":
-    if st.session_state.status != "verified":
-        st.write("You need to log in first")
+    if is_verified():
+        log_in_message()
+        generate_image("Generate an image of an academic advisor")
     else:
         main()
