@@ -20,9 +20,9 @@ def log_in_message():
   st.title("Sorry, you cannot access the app until you log in.")
 
 def generate_image(prompt):
-  vertexai.init(project="paolaalvaradotechx2024", location="us-central1")
+  vertexai.init(project="joemotatechx2024", location="us-central1")
   # Load the Image Generation model
-  model = ImageGenerationModel.from_pretrained("imagegeneration@005")
+  model = ImageGenerationModel.from_pretrained("imagegeneration@006")
   # Generate images based on the user's prompt
   image = model.generate_images(prompt=prompt, number_of_images=1)
   if image:
