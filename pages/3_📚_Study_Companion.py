@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from fpdf import FPDF
 import bcrypt
 
-client = bigquery.Client(project='paolaalvaradotechx2024')
+client = bigquery.Client(project='joemotatechx2024')
 def main():
     def main_page():
         if st.sidebar.button("Logout"):
@@ -136,7 +136,7 @@ def main():
     # Function to save new course to BigQuery
     def get_courses_data():
         query = """
-        SELECT * FROM `paolaalvaradotechx2024.courses_created.new_courses`
+        SELECT * FROM `joemotatechx2024.courses_created.new_courses`
         """
         result = client.query(query).result()
         courses_data = result.to_dataframe()
@@ -263,7 +263,7 @@ def main():
         if st.button("Generate Image"):
             if prompt:
                 # Initialize Vertex AI
-                vertexai.init(project="paolaalvaradotechx2024", location="us-central1")
+                vertexai.init(project="joemotatechx2024", location="us-central1")
                 # Load the Image Generation model
                 model = ImageGenerationModel.from_pretrained("imagegeneration@005")
                 # Generate images based on the user's prompt
@@ -294,7 +294,7 @@ def main():
         table_id = 'homework_input'
         # Query BigQuery to get homework data
         query = f"""
-        SELECT * FROM `paolaalvaradotechx2024.{dataset_id}.{table_id}`
+        SELECT * FROM `joemotatechx2024.{dataset_id}.{table_id}`
         """
         homework_data = client.query(query).to_dataframe()
 
@@ -308,7 +308,7 @@ def main():
 
         # Query BigQuery to get notes data
         query = """
-        SELECT * FROM `paolaalvaradotechx2024.notes_from_student.notes`
+        SELECT * FROM `joemotatechx2024.notes_from_student.notes`
         """
         notes_data = client.query(query).to_dataframe()
 
@@ -382,7 +382,7 @@ def main():
             save_notes_to_bigquery(course_name, notes_content)
 
 
-        genai.configure(api_key='AIzaSyCK-rU375-vmt4Th9hvfBhFXthGFNeuCUk')
+        genai.configure(api_key='AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug')
         model = genai.GenerativeModel('gemini-pro')
 
 
