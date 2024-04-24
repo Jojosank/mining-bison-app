@@ -177,24 +177,17 @@ def main():
 
     input_text = st.text_input(label="Got any question on your checklist?")
 
-    
-
-    # Access the API key from the environment variables
-    GENAI_API_KEY = 'AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug'
-    genai.configure(api_key=GENAI_API_KEY)
-
-    model = genai.GenerativeModel('gemini-pro')
     context = f"You are a helpful academic advisor for a student at {school_name}."
 
     if input_text:
         full_prompt = context + "\n\n" + input_text  # Combine context and input prompt
-        response = model.generate_content(full_prompt)
+        response = generate_text_output(full_prompt)
 
         st.write(
         """
         ##### Your output...
         """)
-        st.write(response.text)
+        st.write(response)
 
 if __name__ == "__main__":
     if is_verified():
