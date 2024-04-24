@@ -59,31 +59,25 @@ def insert_data_into_bigquery(username, story_name, story_content):
         print("Data inserted successfully into BigQuery table.")
 
 def generate_prompt_for_image_generation(story_content):
-    api_key = "AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug"
-    genai.configure(api_key=api_key)
-
-    # Create text generation model
-    text_model = genai.GenerativeModel('gemini-pro')
-
     prompt = "What is the main idea of this story: "
 
     prompt += " ".join(story_content)
 
-    text_response = text_model.generate_content(prompt)
-
-    # Access the text attribute of the GenerateContentResponse object
-    prompt = "Create a single sentence prompt for Google's text to image generation api to generate an image based on the main idea of this story. " + text_response.text + " Your prompt should be generate [Use only one Word]."
+    text_response = generate_text_output(prompt)
     
-    text_response = text_model.generate_content(prompt)
-    st.write(text_response.text)
-    return text_response.text
+    # Access the text attribute of the GenerateContentResponse object
+    prompt = "Create a single sentence prompt for Google's text to image generation api to generate an image based on the main idea of this story. " + text_response + " Your prompt should be generate [Use only one Word or Two]."
+    
+    text_response = generate_text_output(prompt)
+    
+    return text_response
 
 def generate_image_from_text(story_content, output_image_path):
     try:
         # Initialize the image generation model
         vertexai.init(project="joemotatechx2024", location="us-central1")
         model = ImageGenerationModel.from_pretrained("imagegeneration@006")
-        
+
         promptInfo = generate_prompt_for_image_generation(story_content)
         # Generate the image based on the text
         images = model.generate_images(prompt=promptInfo, number_of_images=1)
