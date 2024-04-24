@@ -431,8 +431,6 @@ selected_page = st.sidebar.selectbox(" ", page_names_to_funcs.keys(), index=0)
 # Call the function corresponding to the selected page
 page_names_to_funcs[selected_page]()
 
-
-
 def is_verified():
   return st.session_state.status != "verified"
 
