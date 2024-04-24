@@ -88,10 +88,14 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+def read_bigquery_table(project, table_id):
+    client = bigquery.Client(project=project)
+    query_job = client.query(f"SELECT * FROM `{table_id}`")
+    return query_job.to_dataframe()
+ 
+
 def main():
     username = get_username()
-
-    #credentials, project = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
 
     st.write(
         f"""
@@ -122,18 +126,15 @@ def main():
 
     school_name = st.text_input(label="What college do you attend?")
 
-    # Load environment variables from .env file
-    load_dotenv()
-
-    DATA_SET_ID = os.getenv("DATA_SET_ID")
+    DATA_SET_ID = 'joemotatechx2024.checklist_dataset'
     uploaded_file = st.file_uploader("Study Material", type=None, accept_multiple_files=False, key=None, help="Make sure the file format is .csv", on_change=None, args=None, kwargs=None)
 
     if uploaded_file is not None:
         # Read the file into a Pandas DataFrame
         df = pd.read_csv(uploaded_file)
-        st.write(df)
-
-        client = bigquery.Client(project=DATA_SET_ID.split('.')[0])
+        #st.write(df)
+        project = DATA_SET_ID.split('.')[0]
+        client = bigquery.Client(project=project)
 
 
         # Initialize IDs
@@ -158,6 +159,13 @@ def main():
         job.result()  # Wait for the job to complete.
 
         table = client.get_table(table_id) # Make an API request
+        try:
+            df_from_bigquery = read_bigquery_table(project, table_id)
+        except Exception as e:
+            st.write("Read request from bigquery was not successful")
+        else:
+            st.write(df_from_bigquery)
+            st.success('Read request to bigquery was successful!', icon="✅")
 
         st.write(
         """
@@ -172,7 +180,7 @@ def main():
     
 
     # Access the API key from the environment variables
-    GENAI_API_KEY = os.getenv("GENAI_API_KEY")
+    GENAI_API_KEY = 'AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug'
     genai.configure(api_key=GENAI_API_KEY)
 
     model = genai.GenerativeModel('gemini-pro')
