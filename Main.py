@@ -22,11 +22,13 @@ def check_password():
     QUERY = (
         f"""SELECT * FROM `joemotatechx2024.user_data.user_login` WHERE username = @username"""
     )
+
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter("username", "STRING", st.session_state.username),
         ]
     )
+
     query_job = client.query(QUERY, job_config=job_config)
     rows = query_job.result()
     if rows.total_rows > 0:

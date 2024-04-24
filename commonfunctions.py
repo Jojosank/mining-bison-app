@@ -2,6 +2,7 @@ import streamlit as st
 from google.cloud import bigquery
 import vertexai
 from vertexai.preview.vision_models import ImageGenerationModel
+import google.generativeai as genai
 
 #check is user has logged in else show the Message to log in
 def is_verified():
@@ -19,6 +20,7 @@ def log_out():
 def log_in_message():
   st.title("Sorry, you cannot access the app until you log in.")
 
+#generate image from text
 def generate_image(prompt):
   vertexai.init(project="joemotatechx2024", location="us-central1")
   # Load the Image Generation model
@@ -30,3 +32,17 @@ def generate_image(prompt):
     image[0].save(location="samplefile.jpg")
     # Display the generated image
     st.image("samplefile.jpg")
+
+#generate text output with text prompt input
+def generate_text_output(prompt):
+    api_key = "AIzaSyAl7yfZiDw6Rj0cTk4eRifush_1Ijhpaug"
+    genai.configure(api_key=api_key)
+
+    # Create text generation model
+    text_model = genai.GenerativeModel('gemini-pro')
+
+    text_response = text_model.generate_content(prompt)
+
+    text_response = text_response.text
+    
+    return text_response
