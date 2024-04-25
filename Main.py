@@ -2,6 +2,7 @@ import bcrypt
 import streamlit as st
 from google.cloud import bigquery
 from commonfunctions import*
+
 client = bigquery.Client('joemotatechx2024')
 
 st.set_page_config(

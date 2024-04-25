@@ -344,4 +344,5 @@ if __name__ == "__main__":
         log_in_message()
         generate_image("Generate an image of a Miner")
     else:
+        st.session_state.status = "verified"
         main()
