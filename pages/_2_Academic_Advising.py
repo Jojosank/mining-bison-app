@@ -175,7 +175,7 @@ def main():
 
         st.dataframe(filter_dataframe(df))
 
-    input_text = st.text_input(label="Got any question on your checklist?")
+    input_text = st.text_input("Got any question on your checklist?")
 
     context = f"You are a helpful academic advisor for a student at {school_name}."
 
