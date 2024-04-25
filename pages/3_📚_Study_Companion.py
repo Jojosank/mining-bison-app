@@ -256,7 +256,7 @@ def main():
             save_homework_to_bigquery(course_name, homework_content, due_date)
 
             # Input field for the prompt
-            prompt = st.text_input("Enter a prompt to generate an image.")
+        prompt = st.text_input("Enter a prompt to generate an image.")
 
 
         if st.button("Generate Image"):
@@ -275,12 +275,10 @@ def main():
                     # Display the generated image
                     st.image("samplefile.jpg")
 
-
-                    # Add a download button to download the generated image
-                    st.download_button(label="Download Image", data="samplefile.jpg", file_name="generated_image.jpg")
             else:
                 st.warning("Please enter a prompt to generate an image.")
 
+        st.download_button(label="Download Image", data="samplefile.jpg", file_name="generated_image.jpg")
 
     def page3():
         #    image_url1 = "https://i.pinimg.com/564x/dc/85/ad/dc85ad2f9f21c8210d33cb4345c47deb.jpg"
