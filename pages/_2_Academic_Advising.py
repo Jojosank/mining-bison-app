@@ -102,7 +102,7 @@ def main():
         # Welcome to the Academic Advising Portal, {username}👋!
 
         This resource streamlines and enhances the academic advising experience for students by 
-        leveraging the power of generative AI with tailor-made guidance and advising based on 
+        leveraging the power of generative AI and a user-friendly filter providing tailor-made guidance and advising based on 
         academic goals, history coupled with user interaction.
         """
     )
@@ -117,16 +117,10 @@ def main():
     )
 
 
-    st.write(
-        """
-        ##### Upload Study Material Here
-        """
-    )
-
     school_name = st.text_input(label="What college do you attend?")
 
     DATA_SET_ID = 'joemotatechx2024.checklist_dataset'
-    uploaded_file = st.file_uploader("Study Material", type=None, accept_multiple_files=False, key=None, help="Make sure the file format is .csv", on_change=None, args=None, kwargs=None)
+    uploaded_file = st.file_uploader("Cummulative checklist", type=None, accept_multiple_files=False, key=None, help="Make sure the file format is .csv", on_change=None, args=None, kwargs=None)
 
     if uploaded_file is not None:
         # Read the file into a Pandas DataFrame
