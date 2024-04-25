@@ -110,10 +110,9 @@ def main():
     st.write(
         """
         ## New to Academic Advising  🚀 ...
-
-        - Submit checklist populated with registered classes for the given semester
-        - Interact with chat bot to receive course recommendations and personalized guidance
-        - Retrieve all chats from chat bot whenever you want to 😃!
+        - Enter in your college name.
+        - Submit checklist populated with registered classes for the given semester.
+        - Interact with chat bot to receive course recommendations and personalized guidance 😃!
         """
     )
 
