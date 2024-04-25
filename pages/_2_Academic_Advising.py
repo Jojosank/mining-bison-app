@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 import google.auth.transport.requests
 from google.cloud import bigquery
 import google.generativeai as genai
