@@ -12,7 +12,6 @@ import base64
 import io
 
 client = bigquery.Client('joemotatechx2024')
-st.set_page_config(layout='wide')
 
 def create_pdf(story,output_image_path):
     pdf = FPDF()
@@ -183,9 +182,11 @@ def get_all_stories(username):
     return stories
 
 def main():
+    st.set_page_config(layout='wide')
 
     if st.sidebar.button("Log Out"):
         log_out()
+
     video_file = open('HelpVideo.mp4', 'rb')
     video_bytes = video_file.read()
     st.sidebar.title("Need Help?")
@@ -197,7 +198,7 @@ def main():
         """
         <div style="position: relative; background-color: #FFA421; padding: 1px 0;">
             <h1 style='font-size: 75px; margin: 0; color: white; text-align: center; position: relative; z-index: 2; width: 100%;'>Miner the Story Teller</h1>
-            <img src="https://seeklogo.com/images/U/utep-miners-logo-A773F61820-seeklogo.com.png" class="logo" style="position: absolute; top: 20px; left: 20px; z-index: 3; width: 200px; height: auto;">
+            <img src="https://seeklogo.com/images/U/utep-miners-logo-A773F61820-seeklogo.com.png" class="logo" style="position: absolute; top: 20px; left: 20px; z-index: 3; width: 175px; height: auto;">
             <div style="height: 40px; background-color: #FFA421; position: absolute; bottom: 0; left: 0; width: 100%; z-index: 1;"></div>
         </div>
         """,
@@ -260,7 +261,8 @@ def main():
     """
     st.markdown(button_style, unsafe_allow_html=True)
 
-
+    story_content = " "
+    
     if st.button("Generate"):
         if not story_name:
             st.error("Please enter a story name.")
@@ -293,10 +295,6 @@ def main():
 
                 filename = f"{story_name}.pdf"
 
-                #Save your story into big Query
-                insert_data_into_bigquery(username, story_name, story_content)
-                st.success("Added your story your Library")
-
                 # Create a download button for the PDF file
                 st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Finalize</p>", unsafe_allow_html=True)
                 st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Download your Story Book</p>", unsafe_allow_html=True)
@@ -306,6 +304,14 @@ def main():
                     file_name=filename,
                     mime="application/pdf",
                 )
+
+    if st.sidebar.button("Save Story"):
+        if st.session_state.generated:
+            insert_data_into_bigquery(username, story_name, story_content)
+            st.session_state.generated = False
+            st.success("Added your story your Library")
+        else:
+            st.error("Create story first")
 
     st.markdown("<p style='text-align: center; font-size: 50px; font-weight: bold;'>Library</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 20px; font-weight: bold;'>Checkout all your previously created Story Books</p>", unsafe_allow_html=True)
@@ -344,4 +350,5 @@ if __name__ == "__main__":
         log_in_message()
         generate_image("Generate an image of a Miner")
     else:
+        st.session_state.status = "verified"
         main()
