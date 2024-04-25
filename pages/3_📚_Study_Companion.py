@@ -29,7 +29,6 @@ def main():
         # Display the image using st.image
         image_url = "https://i.pinimg.com/564x/42/c0/2a/42c02af84fac1f5a1f4b36b46de807fd.jpg"
         st.image(image_url,)
-        st.markdown("# Studio Ghibli Companion")
         st.sidebar.markdown(" ")
         # Button for "How to use this app?"
         how_to_button = st.button("How to use this app?", key="how_to_button")
